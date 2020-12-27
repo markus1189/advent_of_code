@@ -13,6 +13,7 @@ let
       comonad
       fgl
       grid
+      hashtables
       lens
       lens
       monad-extras
