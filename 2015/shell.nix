@@ -15,7 +15,6 @@ let
       grid
       hashtables
       lens
-      lens
       monad-extras
       monad-loops
       parsec
@@ -36,5 +35,5 @@ let
     in writeScriptBin "d${n'}" ''
       ${myGhc}/bin/runhaskell --ghc-arg=-Wall day${n'}.hs
     '';
-  range = lib.range 1 1;
+  range = lib.range 1 3;
 in mkShell { buildInputs = [ myGhc ] ++ map mkDay range ++ map compileDay range; }

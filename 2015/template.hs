@@ -1,6 +1,8 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}p
 
 import           Control.Applicative ((<|>))
 import           Data.Text (Text)
@@ -29,3 +31,6 @@ parseInput input =
 
 parser :: Parsec Text () _
 parser = pure ()
+
+numberParser :: (Read a, Num a) => Parsec Text () a
+numberParser = read <$> Parsec.many1 Parsec.digit

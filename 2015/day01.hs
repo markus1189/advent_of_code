@@ -14,7 +14,6 @@ data Direction = Up | Down deriving (Show, Eq, Ord)
 main :: IO ()
 main = do
   input <- TIO.getContents
-  print  . parseInput $ input
   print . solvePart1 . parseInput $ input
   print . solvePart2 . parseInput $ input
 
