@@ -14,7 +14,7 @@ let
       fgl
       grid
       hashtables
-      lens
+      linear
       lens
       monad-extras
       monad-loops
