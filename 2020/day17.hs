@@ -2,11 +2,12 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE FlexibleContexts #-}
 
+import Control.Parallel.Strategies (parMap, rseq, rpar, using, evalTuple2)
 import           Control.Lens.Combinators (lined, folded, asIndex, to, filtered)
 import           Control.Lens.Operators ((<.>), (&), (.~))
 import           Control.Monad (guard)
-import           Data.Map (Map)
-import qualified Data.Map as Map
+import           Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
 import           Data.Set (Set)
 import qualified Data.Set as Set
 import           Data.Set.Lens (setOf)
@@ -25,7 +26,7 @@ solvePart2 :: Set (V4 Int) -> Int
 solvePart2 = genericSolve
 
 genericSolve :: (Traversable f, Applicative f, Num (f Int), Ord (f Int)) => Set (f Int) -> Int
-genericSolve = Set.size . (!!6) . iterate step
+genericSolve = Set.size . (!!10) . iterate step
 
 neighbors :: (Traversable f, Applicative f, Ord (f a), Num a, Num (f a)) => f a -> Set (f a)
 neighbors p = Set.fromList $ do
@@ -34,12 +35,10 @@ neighbors p = Set.fromList $ do
   pure $ p + delta
 
 spreadToMap :: (Traversable f, Applicative f, Ord (f a), Num a, Num (f a)) => Set (f a) -> Map (f a) Int
-spreadToMap ps = Map.unionsWith (+) $ do
-  p <- Set.toList ps
-  pure (Map.fromSet (const 1) (neighbors p))
+spreadToMap = Map.unionsWith (+) . parMap rseq (Map.fromSet (const 1) . neighbors) . Set.toList
 
 step :: (Traversable f, Applicative f, Ord (f a), Num a, Num (f a)) => Set (f a) -> Set (f a)
-step ps = stayAlive <> comeAlive
+step ps = ((stayAlive, comeAlive) `using` evalTuple2 rpar rpar) `seq` stayAlive <> comeAlive
   where
     neighborCounts = spreadToMap ps
     stayAlive = Map.keysSet . Map.filter ((||) <$> (==2) <*> (==3)) $ neighborCounts `Map.restrictKeys` ps
