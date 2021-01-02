@@ -11,6 +11,7 @@ let
       array
       adjunctions
       comonad
+      data-fix
       fgl
       grid
       hashtables
@@ -20,6 +21,7 @@ let
       monad-loops
       parsec
       pointedlist
+      recursion-schemes
       split
       tasty
       tasty-hspec
