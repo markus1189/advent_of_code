@@ -2,7 +2,7 @@
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-import Control.Parallel.Strategies (parMap, rseq, rpar, using, evalTuple2)
+import Control.Parallel.Strategies (parMap, rseq, rpar, runEval)
 import           Control.Lens.Combinators (lined, folded, asIndex, to, filtered)
 import           Control.Lens.Operators ((<.>), (&), (.~))
 import           Control.Monad (guard)
@@ -38,7 +38,12 @@ spreadToMap :: (Traversable f, Applicative f, Ord (f a), Num a, Num (f a)) => Se
 spreadToMap = Map.unionsWith (+) . parMap rseq (Map.fromSet (const 1) . neighbors) . Set.toList
 
 step :: (Traversable f, Applicative f, Ord (f a), Num a, Num (f a)) => Set (f a) -> Set (f a)
-step ps = ((stayAlive, comeAlive) `using` evalTuple2 rpar rpar) `seq` stayAlive <> comeAlive
+step ps = runEval $ do
+  stay <- rpar stayAlive
+  come <- rpar comeAlive
+  _ <- rseq stay
+  _ <- rseq come
+  pure (stay <> come)
   where
     neighborCounts = spreadToMap ps
     stayAlive = Map.keysSet . Map.filter ((||) <$> (==2) <*> (==3)) $ neighborCounts `Map.restrictKeys` ps

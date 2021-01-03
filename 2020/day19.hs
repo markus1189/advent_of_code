@@ -28,7 +28,7 @@ main = do
   input <- TIO.getContents
   let s1 = solvePart1 . parseInput $ input
       s2 = solvePart2 . parseInput $ input
-  print ((s1,s2) `using` evalTuple2 rpar rseq) -- (147,   print s2 -- 263
+  print ((s1,s2) `using` evalTuple2 rpar rseq) -- (147, 263)
 
 solvePart1 :: (Map Int (Rule Int), [String]) -> Int
 solvePart1 (rules, ss) = genericSolve rules ss
