@@ -1,5 +1,7 @@
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 import           Data.Foldable (foldl')
 import           Data.List (sortBy, intercalate)
@@ -14,7 +16,7 @@ import qualified Data.Text.IO as TIO
 import           Text.Parsec (Parsec)
 import qualified Text.Parsec as Parsec
 
-newtype Ingredient = Ingredient { getIngredient :: String } deriving (Show, Eq, Ord)
+newtype Ingredient = Ingredient { getIngredient :: String } deriving newtype (Show, Eq, Ord)
 newtype Allergen = Allergen String deriving (Show, Eq, Ord)
 
 data Food = Food { foodIngredients :: [Ingredient]
@@ -24,8 +26,9 @@ data Food = Food { foodIngredients :: [Ingredient]
 main :: IO ()
 main = do
   input <- TIO.getContents
-  print $ solvePart1 . parseInput $ input
-  putStrLn $ solvePart2 . parseInput $ input
+  let parsed = parseInput input
+  print $ solvePart1 parsed
+  print $ solvePart2 parsed
 
 solvePart1 :: [Food] -> Int
 solvePart1 foods = foldl' (+) 0 $ mapMaybe (`Map.lookup` counts) ingredientsWithoutAllergens
