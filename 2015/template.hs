@@ -2,7 +2,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE PartialTypeSignatures #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}p
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 import           Control.Applicative ((<|>))
 import           Data.Text (Text)

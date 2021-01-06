@@ -10,7 +10,9 @@ let
     with ps; [
       array
       adjunctions
+      base16-bytestring
       comonad
+      cryptohash-md5
       fgl
       grid
       hashtables
@@ -35,5 +37,5 @@ let
     in writeScriptBin "d${n'}" ''
       ${myGhc}/bin/runhaskell --ghc-arg=-Wall day${n'}.hs
     '';
-  range = lib.range 1 3;
+  range = lib.range 1 4;
 in mkShell { buildInputs = [ myGhc ] ++ map mkDay range ++ map compileDay range; }
