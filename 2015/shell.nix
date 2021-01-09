@@ -4,7 +4,7 @@ with pkgs;
 let
   compileHaskell = day: inputFile: pkgs.runCommand "aoc-builder" {} ''
     mkdir -p $out/bin
-    ${myGhc}/bin/ghc --make -O3 -rtsopts -threaded -o "$out/bin/d${day}-compiled" ${inputFile}
+    ${myGhc}/bin/ghc --make -O3 -eventlog -rtsopts -threaded -o "$out/bin/d${day}-compiled" ${inputFile}
   '';
   myHaskellPackages = ps:
     with ps; [
@@ -13,7 +13,9 @@ let
       base16-bytestring
       comonad
       cryptohash-md5
+      extra
       fgl
+      foldl
       grid
       hashtables
       lens
@@ -37,5 +39,5 @@ let
     in writeScriptBin "d${n'}" ''
       ${myGhc}/bin/runhaskell --ghc-arg=-Wall day${n'}.hs
     '';
-  range = lib.range 1 4;
+  range = lib.range 1 5;
 in mkShell { buildInputs = [ myGhc ] ++ map mkDay range ++ map compileDay range; }
