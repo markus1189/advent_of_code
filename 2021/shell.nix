@@ -14,6 +14,7 @@ let
       comonad
       data-fix
       fgl
+      fourmolu
       grid
       hashtables
       haskell-language-server
