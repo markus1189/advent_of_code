@@ -53,7 +53,17 @@ let
     in writeScriptBin "d${n'}" ''
       ${myGhc}/bin/runhaskell --ghc-arg=-Wall --ghc-arg=-fdefer-typed-holes day${n'}.hs
     '';
+  aoce = writeShellScriptBin "aoce" ''
+    cat day$(${pkgs.coreutils}/bin/date +%d)_example.txt | d$(${pkgs.coreutils}/bin/date +%d)
+  '';
+  aoc = writeShellScriptBin "aoc" ''
+    cat day$(${pkgs.coreutils}/bin/date +%d).txt | d$(${pkgs.coreutils}/bin/date +%d)
+  '';
+  aocc = writeShellScriptBin "aocc" ''
+    cat day$(${pkgs.coreutils}/bin/date +%d).txt | d$(${pkgs.coreutils}/bin/date +%d)
+  '';
+
 in mkShell {
-  buildInputs = [ myGhc updateScript ] ++ map mkDay range
+  buildInputs = [ myGhc updateScript aoc aoce aocc ] ++ map mkDay range
     ++ map compileDay range;
 }
