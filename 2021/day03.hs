@@ -14,7 +14,6 @@ main :: IO ()
 main = do
   input <- TIO.getContents
   let parsed = parseInput input
-  print parsed
   print $ solvePart1 parsed
   print $ solvePart2 parsed
 
