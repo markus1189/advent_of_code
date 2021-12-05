@@ -2,7 +2,7 @@
 with pkgs;
 
 let
-  range = lib.range 0 4;
+  range = lib.range 0 5;
   compileHaskell = day: inputFile:
     pkgs.runCommand "aoc-builder" { } ''
       mkdir -p $out/bin
