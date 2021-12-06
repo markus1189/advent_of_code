@@ -1,5 +1,7 @@
+{-# TemplateHaskell #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 
 import           Control.Applicative ((<|>))
