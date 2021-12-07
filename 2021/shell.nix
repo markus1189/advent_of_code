@@ -6,7 +6,7 @@ let
   compileHaskell = day: inputFile:
     pkgs.runCommand "aoc-builder" { } ''
       mkdir -p $out/bin
-      ${myGhc}/bin/ghc --make -O3 -rtsopts -eventlog -threaded -o "$out/bin/d${day}-compiled" ${inputFile}
+      ${myGhc}/bin/ghc -i ${./Parsers.hs} --make -O3 -rtsopts -eventlog -threaded -o "$out/bin/d${day}-compiled" ${inputFile}
     '';
   updateScript = pkgs.writeShellScriptBin "update" ''
     set -e
@@ -61,7 +61,7 @@ let
     cat day$(${pkgs.coreutils}/bin/date +%d).txt | d$(${pkgs.coreutils}/bin/date +%d)
   '';
   aocc = writeShellScriptBin "aocc" ''
-    cat day$(${pkgs.coreutils}/bin/date +%d).txt | d$(${pkgs.coreutils}/bin/date +%d) +RTS -s
+    cat day$(${pkgs.coreutils}/bin/date +%d).txt | d$(${pkgs.coreutils}/bin/date +%d)-compiled +RTS -s
   '';
 
 in mkShell {
