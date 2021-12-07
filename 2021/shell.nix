@@ -2,7 +2,7 @@
 with pkgs;
 
 let
-  range = lib.range 0 6;
+  range = lib.range 0 7;
   compileHaskell = day: inputFile:
     pkgs.runCommand "aoc-builder" { } ''
       mkdir -p $out/bin
@@ -32,6 +32,7 @@ let
       haskell-language-server
       linear
       lens
+      MemoTrie
       monad-extras
       monad-loops
       parsec
@@ -60,7 +61,7 @@ let
     cat day$(${pkgs.coreutils}/bin/date +%d).txt | d$(${pkgs.coreutils}/bin/date +%d)
   '';
   aocc = writeShellScriptBin "aocc" ''
-    cat day$(${pkgs.coreutils}/bin/date +%d).txt | d$(${pkgs.coreutils}/bin/date +%d)
+    cat day$(${pkgs.coreutils}/bin/date +%d).txt | d$(${pkgs.coreutils}/bin/date +%d) +RTS -s
   '';
 
 in mkShell {
