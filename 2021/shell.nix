@@ -61,7 +61,7 @@ let
     cat day$(${pkgs.coreutils}/bin/date +%d).txt | d$(${pkgs.coreutils}/bin/date +%d)
   '';
   aocc = writeShellScriptBin "aocc" ''
-    cat day$(${pkgs.coreutils}/bin/date +%d).txt | d$(${pkgs.coreutils}/bin/date +%d)-compiled +RTS -s
+    cat day$(${pkgs.coreutils}/bin/date +%d).txt | d$(${pkgs.coreutils}/bin/date +%d)-compiled +RTS -N -s
   '';
 
 in mkShell {
