@@ -2,11 +2,13 @@
 with pkgs;
 
 let
-  range = lib.range 0 7;
+  range = lib.range 0 8;
   compileHaskell = day: inputFile:
     pkgs.runCommand "aoc-builder" { } ''
       mkdir -p $out/bin
-      ${myGhc}/bin/ghc -i ${./Parsers.hs} --make -O3 -rtsopts -eventlog -threaded -o "$out/bin/d${day}-compiled" ${inputFile}
+      ${myGhc}/bin/ghc -i ${
+        ./Parsers.hs
+      } --make -O3 -rtsopts -eventlog -threaded -o "$out/bin/d${day}-compiled" ${inputFile}
     '';
   updateScript = pkgs.writeShellScriptBin "update" ''
     set -e
@@ -20,7 +22,11 @@ let
     echo Done
   '';
   myHaskellPackages = ps:
-    with ps; [
+    with ps;
+    let
+      fixedHolmes = (pkgs.haskell.lib.unmarkBroken
+        (pkgs.haskell.lib.doJailbreak ps.holmes));
+    in [
       array
       adjunctions
       comonad
@@ -44,7 +50,7 @@ let
       text
       unordered-containers
       stm
-    ];
+    ] ++ [ fixedHolmes ];
   myGhc = haskellPackages.ghcWithHoogle myHaskellPackages;
   compileDay = n:
     let n' = if n < 10 then "0${toString n}" else toString n;
