@@ -20,6 +20,9 @@ import qualified Data.Text.IO as TIO
 import Data.Tree (Tree (Node), unfoldTree)
 import Text.Parsec (Parsec)
 import qualified Text.Parsec as Parsec
+import Control.Monad.Reader.Class (MonadReader)
+import qualified Control.Monad.Reader.Class as Reader
+import Control.Monad.Reader (runReader)
 
 main :: IO ()
 main = do
@@ -29,27 +32,32 @@ main = do
   print $ solvePart2 parsed
 
 solvePart1 :: [(String, String)] -> Int
-solvePart1 es = lengthOf (folded . filtered (== "end")) $ prune1 (Set.singleton "start") $ unfoldTree (\cur -> (cur, fromMaybe [] (Map.lookup cur m))) "start"
+solvePart1 es = lengthOf (folded . filtered (== "end")) $ flip runReader (Set.singleton "start") $ prune1 $ unfoldTree (\cur -> (cur, fromMaybe [] (Map.lookup cur m))) "start"
   where
     m = buildMap es
 
-prune1 :: Set String -> Tree String -> Tree String
-prune1 seen (Node x xs) = Node x xs'
-  where
-    xs' = map (\n@(Node x' _) -> prune1 (if all isLower x' then Set.insert x' seen else seen) n) unseenNext
-    unseenNext = filter (\(Node x' _) -> not (Set.member x' seen)) xs
+prune1 :: MonadReader (Set String) m => Tree String -> m (Tree String)
+prune1 (Node x xs) = do
+  seen <- Reader.ask
+  let unseenNext = filter (\(Node x' _) -> not (Set.member x' seen)) xs
+  xs' <- traverse (\n@(Node x' _) -> Reader.local (if all isLower x' then Set.insert x' else id) $ prune1 n) unseenNext
+  pure (Node x xs')
 
 solvePart2 :: [(String, String)] -> Int
 solvePart2 es =
-  length $ filter ((== "end") . last) $ toPaths $ prune2 (Map.singleton "start" 0) $ unfoldTree (\cur -> (cur, fromMaybe [] (Map.lookup cur m))) "start"
+  length $ filter ((== "end") . last) $ toPaths $ flip runReader (Map.singleton "start" 0) $ prune2 $ unfoldTree (\cur -> (cur, fromMaybe [] (Map.lookup cur m))) "start"
   where
     m = buildMap es
 
-prune2 :: Map String Int -> Tree String -> Tree String
-prune2 seen (Node x xs) = if x == "end" then Node x [] else Node x xs'
-  where
-    xs' = map (\n@(Node x' _) -> prune2 (if all isLower x' then Map.insertWith (+) x' 1 seen else seen) n) unseenNext
-    unseenNext = filter (\(Node x' _) -> not (Map.member x' seen) || all (<= 1) seen) xs
+prune2 :: MonadReader (Map String Int) m => Tree String -> m (Tree String)
+prune2 (Node x xs) =
+  if x == "end"
+    then pure (Node x [])
+    else do
+      seen <- Reader.ask
+      let unseenNext = filter (\(Node x' _) -> not (Map.member x' seen) || all (<= 1) seen) xs
+      xs' <- traverse (\n@(Node x' _) -> Reader.local (if all isLower x' then Map.insertWith (+) x' 1 else id) $ prune2 n) unseenNext
+      pure (Node x xs')
 
 toPaths :: Tree String -> [[String]]
 toPaths (Node x []) = [[x]]
