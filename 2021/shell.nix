@@ -8,7 +8,7 @@ let
       mkdir -p $out/bin
       ${myGhc}/bin/ghc -i ${
         ./Parsers.hs
-      } --make -O3 -rtsopts -eventlog -threaded -o "$out/bin/d${day}-compiled" ${inputFile}
+      } --make -O3 -rtsopts -eventlog -prof -fprof-auto -fexternal-interpreter -threaded -o "$out/bin/d${day}-compiled" ${inputFile}
     '';
   updateScript = pkgs.writeShellScriptBin "update" ''
     set -e
