@@ -2,7 +2,7 @@
 with pkgs;
 
 let
-  range = lib.range 0 14;
+  range = lib.range 0 15;
   compileHaskell = day: inputFile:
     pkgs.runCommand "aoc-builder" { } ''
       mkdir -p $out/bin
@@ -44,6 +44,7 @@ let
       parsec
       pointedlist
       recursion-schemes
+      search-algorithms
       split
       tasty
       tasty-hspec
@@ -67,7 +68,7 @@ let
     cat day$(${pkgs.coreutils}/bin/date +%d).txt | d$(${pkgs.coreutils}/bin/date +%d)
   '';
   aocc = writeShellScriptBin "aocc" ''
-    cat day$(${pkgs.coreutils}/bin/date +%d).txt | d$(${pkgs.coreutils}/bin/date +%d)-compiled +RTS -N -s
+    cat day$(${pkgs.coreutils}/bin/date +%d).txt | d$(${pkgs.coreutils}/bin/date +%d)-compiled +RTS -N -s -pj
   '';
 
 in mkShell {
