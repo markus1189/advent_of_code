@@ -4,22 +4,37 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeApplications #-}
+{-# OPTIONS_GHC -Wno-missing-signatures #-}
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
+{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
+{-# OPTIONS_GHC -Wno-partial-type-signatures #-}
+{-# OPTIONS_GHC -Wno-type-defaults #-}
+{-# OPTIONS_GHC -Wno-typed-holes #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
+{-# OPTIONS_GHC -Wno-unused-local-binds #-}
+{-# OPTIONS_GHC -Wno-unused-matches #-}
+{-# OPTIONS_GHC -Wno-unused-top-binds #-}
 
 import Control.Applicative ((<|>))
+import Control.Arrow ((&&&))
 import Control.Lens.Combinators
 import Control.Lens.Operators
 import Control.Lens.TH (makeLenses)
 import Control.Monad (guard, void)
 import Data.Functor (($>))
+import Data.Graph.Inductive (mkGraph)
+import Data.Graph.Inductive.PatriciaTree (Gr)
+import Data.Graph.Inductive.Query.SP (sp)
 import Data.List
-import Data.List.Extra (nubOrdOn)
-import Data.Map.Strict (Map)
+import Data.List.Extra (nubOrd, nubOrdOn)
 import qualified Data.Map.Lazy as Map
-import Data.Maybe (catMaybes, isJust, listToMaybe, fromJust)
+import Data.Map.Strict (Map)
+import Data.Maybe (catMaybes, fromJust, isJust, listToMaybe, mapMaybe)
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text.IO as TIO
+import Data.Tuple (swap)
 import Debug.Trace
 import Linear.Matrix
 import Linear.V3
@@ -40,48 +55,82 @@ main :: IO ()
 main = do
   input <- TIO.getContents
   let parsed = parseInput parser input
-  traverse print $ solvePart1 parsed
+  solvePart1 parsed
   pure ()
-  -- print relative
-  -- print $ solvePart2 parsed
-
-solutionPart1 =
-  [ ((0, 1), [RotateY, RotateY], (V3 68 (-1246) (-43), [V3 404 (-588) (-901), V3 528 (-643) 409, V3 390 (-675) (-793), V3 (-537) (-823) (-458), V3 (-485) (-357) 347, V3 (-345) (-311) 381, V3 (-661) (-816) (-575), V3 (-618) (-824) (-621), V3 (-447) (-329) 318, V3 544 (-627) (-890), V3 423 (-701) 434, V3 459 (-707) 401])),
-    ((1, 3), [], (V3 160 (-1134) (-23), [V3 (-340) (-569) (-846), V3 567 (-361) 727, V3 669 (-402) 600, V3 (-500) (-761) 534, V3 (-466) (-666) (-811), V3 (-429) (-592) 574, V3 703 (-491) (-529), V3 (-328) (-685) 520, V3 586 (-435) 557, V3 (-364) (-763) (-893), V3 807 (-499) (-711), V3 755 (-354) (-619)])),
-    ((1, 4), [RotateY, RotateZ, RotateZ, RotateZ], (V3 88 113 (-1104), [V3 515 917 (-361), V3 (-340) (-569) (-846), V3 (-460) 603 (-452), V3 (-466) (-666) (-811), V3 (-355) 545 (-477), V3 703 (-491) (-529), V3 413 935 (-424), V3 (-391) 539 (-444), V3 (-364) (-763) (-893), V3 807 (-499) (-711), V3 755 (-354) (-619), V3 553 889 (-390)])),
-    ((2, 4), [RotateX, RotateX, RotateZ], (V3 1125 (-168) 72, [V3 649 640 665, V3 682 (-795) 504, V3 500 723 (-460), V3 609 671 (-379), V3 697 (-426) (-610), V3 578 704 681, V3 493 664 (-388), V3 571 (-461) (-707), V3 646 (-828) 498, V3 640 759 510, V3 673 (-379) (-804), V3 577 (-820) 562]))
-  ]
-
-relative = m
-  where m =  Map.fromList [ (1, V3 68 (-1246) (-43)),
-                            (2, m Map.! 4 + applyInstr (therotations Map.! 4) (V3 1125 (-168) 72)),
-                            (3, m Map.! 1 + applyInstr (therotations Map.! 1) (V3 160 (-1134) (-23))),
-                            (4, m Map.! 1 + applyInstr (therotations Map.! 1) (V3 88 113 (-1104)))
-             ]
-therotations = Map.fromList [ (1,[RotateY, RotateY])
-                  , (2,[RotateX, RotateX, RotateZ] ++ therotations Map.! 4)
-                  , (3,therotations Map.! 1 ++ [])
-                  , (4,therotations Map.! 1 ++ [RotateY, RotateZ, RotateZ, RotateZ])
-                  ]
-
-theSolutionP1 = Map.fromList [(1,V3 68 (-1246) (-43)),(2,V3 (-188) (-1061) 2186),(3,V3 (-92) (-2380) (-20)),(4,V3 (-20) (-1133) 1061)]
-
 
 solvePart1 :: [Scanner] -> _
-solvePart1 ss =
-  g
-  -- scannerTransformations
-  -- map (\(Scanner sid beacons) -> map ((solution' Map.! sid +)) beacons) ss
+solvePart1 ss = do
+  putStrLn "\n---------------------------------------- paths ----------------------------------------\n"
+  print paths
+  putStrLn "\n---------------------------------------- edgeToInstr ----------------------------------------\n"
+  print edgeToInstr
+  putStrLn "\n---------------------------------------- g ----------------------------------------\n"
+  print g
+  putStrLn "\n---------------------------------------- bases ----------------------------------------\n"
+  print bases
+  putStrLn "\n---------------------------------------- pathInstrs ----------------------------------------\n"
+  print pathInstrs
+  putStrLn "\n---------------------------------------- resultBases ----------------------------------------\n"
+  print resultBases
+  putStrLn "\n---------------------------------------- result ----------------------------------------\n"
+  print result
   where
-    solution' = Map.insert 0 (V3 0 0 0) theSolutionP1
-    therotations' = Map.insert 0 [] therotations
     f x y = find (isJust . view _2) (map (\(i, s') -> (i,) <$> findProjection (x ^. scannerBeacons) . view scannerBeacons $ s') (allScanners y)) >>= (\(is, m) -> ((x ^. scannerId, y ^. scannerId),is,) <$> m)
-    g = catMaybes $ do
-      x <- ss
-      y <- filter (\s -> s ^. scannerId > x ^. scannerId) ss
-      pure $ f x y
-    scannerTransformations = Map.fromList $ map (\((f,t),is,b) -> (t,(is,b))) g
+
+    nodes = map ((\i -> (i, i)) . view scannerId) ss
+    edges = map ((\(x, y) -> (x, y, 1)) . view _1) g
+    graph = mkGraph @Gr nodes edges
+    path n = sp @Gr @Int n 0 graph
+    paths = mapMaybe (\x -> (x ^. scannerId,) <$> (fmap (reverse . map swap . pairs) . path . view scannerId $ x)) ss
+
+    pathInstrs = Map.fromList $ map (over _2 (foldl' (\acc e -> acc <> [edgeToInstr Map.! e]) [])) $ paths
+
+    bases :: Map (Int, Int) (V3 Int)
+    bases = Map.fromList $ map (view _1 &&& view _3) g
+
+    edgeToInstr :: Map (Int, Int) [Instr]
+    edgeToInstr = Map.fromList $ map (\(k, v, _) -> (k, v)) g
+
+    relativePositions :: Map Int (V3 Int)
+    relativePositions = Map.fromList $ map (\sid -> (sid, V3 0 0 0)) $ map (view scannerId) ss
+
+    result = (\x -> (length x, x)) $ nubOrd $ concatMap (\(Scanner sid beacons) -> let (is,b) = resultBases Map.! sid in map (\beacon -> b + applyInstr is beacon) beacons) ss
+
+    resultBases =
+      Map.fromList $
+        mapMaybe
+          ( \(sid, es) ->
+              fmap (sid,) $
+                if null es
+                  then Just ([], V3 0 0 0)
+                  else
+                    if length es == 1
+                      then Just ([], bases Map.! head es)
+                      else
+                        Just $
+                          foldl'
+                            ( \(isAcc, acc) (b1, b2) ->
+                                let bb2 = bases Map.! b1
+                                    bb1 = bases Map.! b2
+                                    bis = edgeToInstr Map.! b1
+                                 in (isAcc <> bis, acc + bases Map.! b1 + applyInstr (edgeToInstr Map.! b1) (bases Map.! b2))
+                            )
+                            ([], V3 0 0 0)
+                            $ pairs es
+          )
+          paths
+
+    g =
+      catMaybes $ do
+        x <- ss
+        y <- ss
+        guard $ x /= y
+        pure $ f x y
+    scannerTransformations = Map.fromList $ map (\((f, t), is, b) -> (t, (is, b))) g
 solvePart1 _ = error ""
+
+pairs :: [a] -> [(a, a)]
+pairs xs = xs `zip` tail xs
 
 solve :: [((Int, Int), ([Instr], V3 Int, [V3 Int]))] -> _
 solve = _
@@ -90,7 +139,6 @@ solve = _
 
 allScanners :: Scanner -> [([Instr], Scanner)]
 allScanners s = map (\is -> (is, applyInstrScanner is s)) instrs
-  where
 
 instrs =
   [ [],
