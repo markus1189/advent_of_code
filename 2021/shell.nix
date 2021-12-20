@@ -2,13 +2,13 @@
 with pkgs;
 
 let
-  range = lib.range 0 19;
+  range = lib.range 0 20;
   compileHaskell = day: inputFile:
     pkgs.runCommand "aoc-builder" { } ''
       mkdir -p $out/bin
       ${myGhc}/bin/ghc -i ${
         ./Parsers.hs
-      } --make -O3 -rtsopts -eventlog -prof -fprof-auto -fexternal-interpreter -threaded -o "$out/bin/d${day}-compiled" ${inputFile}
+      } --make -O3 -rtsopts -eventlog -prof -fprof-auto -fexternal-interpreter -fdefer-typed-holes -threaded -o "$out/bin/d${day}-compiled" ${inputFile}
     '';
   updateScript = pkgs.writeShellScriptBin "update" ''
     set -e
